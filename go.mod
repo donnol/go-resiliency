@@ -1,3 +1,3 @@
-module github.com/eapache/go-resiliency
+module github.com/donnol/go-resiliency
 
 go 1.18

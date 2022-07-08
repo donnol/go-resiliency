@@ -1,9 +1,9 @@
 go-resiliency
 =============
 
-[![Golang CI](https://github.com/eapache/go-resiliency/actions/workflows/golang-ci.yml/badge.svg)](https://github.com/eapache/go-resiliency/actions/workflows/golang-ci.yml)
-[![GoDoc](https://godoc.org/github.com/eapache/go-resiliency?status.svg)](https://godoc.org/github.com/eapache/go-resiliency)
-[![Code of Conduct](https://img.shields.io/badge/code%20of%20conduct-active-blue.svg)](https://eapache.github.io/conduct.html)
+[![Golang CI](https://github.com/donnol/go-resiliency/actions/workflows/golang-ci.yml/badge.svg)](https://github.com/donnol/go-resiliency/actions/workflows/golang-ci.yml)
+[![GoDoc](https://godoc.org/github.com/donnol/go-resiliency?status.svg)](https://godoc.org/github.com/donnol/go-resiliency)
+[![Code of Conduct](https://img.shields.io/badge/code%20of%20conduct-active-blue.svg)](https://donnol.github.io/conduct.html)
 
 Resiliency patterns for golang.
 Based in part on [Hystrix](https://github.com/Netflix/Hystrix),
