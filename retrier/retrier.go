@@ -60,6 +60,8 @@ func (r *Retrier) RunCtx(ctx context.Context, work func(ctx context.Context) err
 				return ret
 			}
 
+			// 为什么不直接`time.Sleep(r.calcSleep(retries))`呢
+			// 因为还是考虑ctx，因为ctx有可能在睡眠时间内`Done`了
 			timeout := time.After(r.calcSleep(retries))
 			if err := r.sleep(ctx, timeout); err != nil {
 				return err

@@ -6,27 +6,27 @@ import (
 	"time"
 )
 
-type work struct {
-	param  interface{}
+type work[T any] struct {
+	param  T
 	future chan error
 }
 
 // Batcher implements the batching resiliency pattern
-type Batcher struct {
+type Batcher[T any] struct {
 	timeout   time.Duration
-	prefilter func(interface{}) error
+	prefilter func(T) error
 
 	lock   sync.Mutex
-	submit chan *work
-	doWork func([]interface{}) error
+	submit chan *work[T]
+	doWork func([]T) error
 }
 
 // New constructs a new batcher that will batch all calls to Run that occur within
 // `timeout` time before calling doWork just once for the entire batch. The doWork
 // function must be safe to run concurrently with itself as this may occur, especially
 // when the timeout is small.
-func New(timeout time.Duration, doWork func([]interface{}) error) *Batcher {
-	return &Batcher{
+func New[T any](timeout time.Duration, doWork func([]T) error) *Batcher[T] {
+	return &Batcher[T]{
 		timeout: timeout,
 		doWork:  doWork,
 	}
@@ -35,7 +35,7 @@ func New(timeout time.Duration, doWork func([]interface{}) error) *Batcher {
 // Run runs the work function with the given parameter, possibly
 // including it in a batch with other calls to Run that occur within the
 // specified timeout. It is safe to call Run concurrently on the same batcher.
-func (b *Batcher) Run(param interface{}) error {
+func (b *Batcher[T]) Run(param T) error {
 	if b.prefilter != nil {
 		if err := b.prefilter(param); err != nil {
 			return err
@@ -43,10 +43,10 @@ func (b *Batcher) Run(param interface{}) error {
 	}
 
 	if b.timeout == 0 {
-		return b.doWork([]interface{}{param})
+		return b.doWork([]T{param})
 	}
 
-	w := &work{
+	w := &work[T]{
 		param:  param,
 		future: make(chan error, 1),
 	}
@@ -61,24 +61,24 @@ func (b *Batcher) Run(param interface{}) error {
 // that error is returned immediately from Run and the batcher is not invoked. A prefilter
 // cannot safely be specified for a batcher if Run has already been invoked. The filter function
 // specified must be concurrency-safe.
-func (b *Batcher) Prefilter(filter func(interface{}) error) {
+func (b *Batcher[T]) Prefilter(filter func(T) error) {
 	b.prefilter = filter
 }
 
-func (b *Batcher) submitWork(w *work) {
+func (b *Batcher[T]) submitWork(w *work[T]) {
 	b.lock.Lock()
 	defer b.lock.Unlock()
 
 	if b.submit == nil {
-		b.submit = make(chan *work, 4)
+		b.submit = make(chan *work[T], 4)
 		go b.batch()
 	}
 
 	b.submit <- w
 }
 
-func (b *Batcher) batch() {
-	var params []interface{}
+func (b *Batcher[T]) batch() {
+	var params []T
 	var futures []chan error
 	input := b.submit
 
@@ -97,7 +97,7 @@ func (b *Batcher) batch() {
 	}
 }
 
-func (b *Batcher) timer() {
+func (b *Batcher[T]) timer() {
 	time.Sleep(b.timeout)
 
 	b.lock.Lock()

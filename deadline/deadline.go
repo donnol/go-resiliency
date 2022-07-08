@@ -31,8 +31,17 @@ func (d *Deadline) Run(work func(<-chan struct{}) error) error {
 	result := make(chan error)
 	stopper := make(chan struct{})
 
+	// 两个select阻塞住，直到结果返回或超时
+
 	go func() {
+		// 如果work执行的时间远超timeout，不也没办法让work在超时的时间结束吗；
+		// 所以要将stopper管道传进去，work函数实现时就要根据它来判断是不是要及时停止
+		//
+		// 所以，如果work函数的实现里，对于stopper的检查不够及时，也会运行得比超时时间更长
 		value := work(stopper)
+
+		// work一直在执行就不返回，那还怎么进入select呢？
+		// 所以，work里对于stopper的检查是非常必要的，虽然可能会稍慢一点，但这个goroutine最终还是会停止的
 		select {
 		case result <- value:
 		case <-stopper:

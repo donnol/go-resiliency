@@ -2,6 +2,7 @@ package deadline
 
 import (
 	"errors"
+	"log"
 	"testing"
 	"time"
 )
@@ -20,6 +21,24 @@ func returnsError(stopper <-chan struct{}) error {
 	return errors.New("foo")
 }
 
+func batch(stopper <-chan struct{}) error {
+	// 一边执行任务，一边检查stopper
+	for {
+		select {
+		case <-stopper:
+			return errors.New("timeout")
+		default:
+			// 正常逻辑
+			log.Printf("batch\n")
+
+			// 用睡眠来模拟真实业务的执行；
+			// 显然，真实的业务执行时间是不可控的；
+			time.Sleep(4 * time.Millisecond) // run 3 times under 10ms timeout
+			// time.Sleep(5 * time.Millisecond) // run 2 times under 10ms timeout
+		}
+	}
+}
+
 func TestDeadline(t *testing.T) {
 	dl := New(10 * time.Millisecond)
 
@@ -33,6 +52,10 @@ func TestDeadline(t *testing.T) {
 
 	if err := dl.Run(returnsError); err.Error() != "foo" {
 		t.Error(err)
+	}
+
+	if err := dl.Run(batch); err != ErrTimedOut {
+		t.Fatal(err)
 	}
 
 	done := make(chan struct{})

@@ -6,6 +6,9 @@ import (
 )
 
 func TestSemaphoreAcquireRelease(t *testing.T) {
+	// 异或：异真同假
+	// t.Logf("XOR: 1^0 = %v, 0^1 = %v, 0^0 = %v, 1^1 = %v", 1^0, 0^1, 0^0, 1^1) // 1, 1, 0, 0
+
 	sem := New(3, 1*time.Second)
 
 	for i := 0; i < 10; i++ {
